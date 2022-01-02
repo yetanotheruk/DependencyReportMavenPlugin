@@ -15,14 +15,17 @@ import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.shared.dependency.graph.traversal.BuildingDependencyNodeVisitor;
 import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
+import uk.yetanother.dependency.report.datastore.IFossDatastore;
+import uk.yetanother.dependency.report.datastore.InternalFileFossDatastore;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashSet;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Mojo to have the CSV goal. This class uses the Maven Dependency Tree to work out all the dependencies for the
@@ -30,6 +33,9 @@ import java.util.Set;
  */
 @Mojo(name = "csv", defaultPhase = LifecyclePhase.VERIFY)
 public class CsvExporterMojo extends AbstractMojo {
+
+    private static final String DELIMITER = ",";
+    private static final String DEFAULT_HEADINGS = "id,groupId,artifactId,version,classifier,type,scope";
 
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     private MavenProject project;
@@ -60,16 +66,28 @@ public class CsvExporterMojo extends AbstractMojo {
             throw new MojoExecutionException("Cannot build project dependency graph", e);
         }
 
+        getLog().info("looking for Foss Datastore in " + Paths.get("").toAbsolutePath());
+        IFossDatastore fossDatastore = new InternalFileFossDatastore(getLog());
+
         StringWriter writer = new StringWriter();
-        writer.write("id,groupId,artifactId,version,classifier,type,scope");
-        for (String line : processDependencyTree(rootNode)) {
-            writer.write("\n" + line);
+        writer.write(DEFAULT_HEADINGS + arrayToCsv(fossDatastore.getAdditionalAttributeHeadings()));
+        Map<String, String> dependencies = processDependencyTree(rootNode);
+        for (Map.Entry<String, String> dependency : dependencies.entrySet()) {
+            writer.write("\n" + dependency.getValue() + arrayToCsv(fossDatastore.getAdditionalAttributesForFossItem(dependency.getKey())));
         }
         exportReport(writer.toString());
     }
 
-    private Set<String> processDependencyTree(DependencyNode theRootNode) {
-        Set<String> dependencies = new HashSet<>();
+    private String arrayToCsv(String[] data) {
+        StringBuilder stringToReturn = new StringBuilder();
+        for (String item : data) {
+            stringToReturn.append(DELIMITER).append(item == null ? "" : item);
+        }
+        return stringToReturn.toString();
+    }
+
+    private Map<String, String> processDependencyTree(DependencyNode theRootNode) {
+        Map<String, String> dependencies = new HashMap<>();
         DependencyNodeVisitor visitor = new CsvDependencyNodeVisitor(dependencies);
         visitor = new BuildingDependencyNodeVisitor(visitor);
         theRootNode.accept(visitor);
