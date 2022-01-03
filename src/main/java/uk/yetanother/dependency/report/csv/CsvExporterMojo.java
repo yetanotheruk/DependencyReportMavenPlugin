@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +36,9 @@ public class CsvExporterMojo extends AbstractMojo {
     private static final String DELIMITER = ",";
     private static final String DEFAULT_HEADINGS = "id,groupId,artifactId,version,classifier,type,scope";
 
+    @Component
+    private DependencyGraphBuilder dependencyGraphBuilder;
+
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     private MavenProject project;
 
@@ -45,9 +47,6 @@ public class CsvExporterMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${reactorProjects}", readonly = true, required = true)
     private List<MavenProject> reactorProjects;
-
-    @Component
-    private DependencyGraphBuilder dependencyGraphBuilder;
 
     @Parameter(defaultValue = "${project.build.directory}", property = "outputDirectory", required = true)
     private File outputDirectory;
@@ -66,7 +65,6 @@ public class CsvExporterMojo extends AbstractMojo {
             throw new MojoExecutionException("Cannot build project dependency graph", e);
         }
 
-        getLog().info("looking for Foss Datastore in " + Paths.get("").toAbsolutePath());
         IFossDatastore fossDatastore = new InternalFileFossDatastore(getLog());
 
         StringWriter writer = new StringWriter();

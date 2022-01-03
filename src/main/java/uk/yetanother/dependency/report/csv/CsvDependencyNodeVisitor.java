@@ -7,7 +7,7 @@ import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
 import java.util.Map;
 
 /**
- * CSV dependency node visitor is used by the Maven Dependency Tree code and builds up a unique set of dependencies seen.
+ * CSV dependency node visitor is used by the Maven Dependency Tree code and builds up a unique map of dependencies seen.
  */
 public class CsvDependencyNodeVisitor implements DependencyNodeVisitor {
 
@@ -17,7 +17,7 @@ public class CsvDependencyNodeVisitor implements DependencyNodeVisitor {
      * CSV dependency node visitor constructor. Takes an empty Set of Strings that will be populated with the dependencies
      * seen while parsing the dependency tree.
      *
-     * @param dependencies empty Set of Strings that will be populated with dependency information.
+     * @param dependencies empty Map of Strings that will be populated with dependency information keyed by the artifact ID.
      */
     public CsvDependencyNodeVisitor(Map<String, String> dependencies) {
         this.dependencies = dependencies;
