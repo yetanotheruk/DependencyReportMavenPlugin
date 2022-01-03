@@ -46,7 +46,10 @@ public class InternalFileFossDatastore implements IFossDatastore {
 
     public static Path getDatastoreLocation() throws MojoExecutionException {
         try {
-            String dataDir = new File(InternalFileFossDatastore.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+            File dataDirFile = new File(InternalFileFossDatastore.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+
+            // If the location detected results in the JAR file itself, use the parent Directory, otherwise use the location as is.
+            String dataDir = dataDirFile.isFile() ? dataDirFile.getParent() : dataDirFile.getAbsolutePath();
             return Paths.get(dataDir + FileSystems.getDefault().getSeparator() + "fossAdditionalAttributes.csv");
         } catch (URISyntaxException e) {
             throw new MojoExecutionException("Unable to determine datastore location", e);
